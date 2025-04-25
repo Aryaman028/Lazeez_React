@@ -1,65 +1,36 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    DOCKER_IMAGE = 'aryaman28/lazeez_react'    
-    DOCKER_CREDENTIALS_ID = 'dockerhub-creds'          
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        echo '📦 Cloning source code...'
-        git 'https://github.com/Aryaman028/Lazeez_react' 
-      }
-    }
-
-    stage('Install & Build') {
-      steps {
-        echo '🔧 Installing dependencies...'
-        sh 'npm install'
-        echo '🏗️ Building the app...'
-        sh 'npm run build'
-      }
-    }
-
-    stage('Docker Build') {
-      steps {
-        echo '🐳 Building Docker image...'
-        script {
-          docker.build("${DOCKER_IMAGE}")
+    stages {
+        stage('Docker Cleanup') {
+            steps {
+                bat '''
+                docker stop lazeez_react || echo Container not running
+                docker rm lazeez_react || echo No container to remove
+                docker rmi -f lazeez_react || echo No image to remove
+                '''
+            }
         }
-      }
-    }
-
-    stage('Docker Push') {
-      steps {
-        echo '📤 Pushing Docker image to Docker Hub...'
-        withCredentials([usernamePassword(
-          credentialsId: "${DOCKER_CREDENTIALS_ID}",
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
-        )]) {
-          sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-          sh "docker push ${DOCKER_IMAGE}"
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t lazeez_react .'
+            }
         }
-      }
+        stage('Run Container') {
+            steps {
+                bat 'docker run -d -p 3000:80 --name lazeez_react lazeez_react'
+            }
+        }
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    bat '''
+                        docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+                        docker tag lazeez_react %DOCKER_USER%/lazeez_react
+                        docker push %DOCKER_USER%/lazeez_react
+                    '''
+                }
+            }
+        }        
     }
-
-    stage('Cleanup') {
-      steps {
-        sh 'docker logout'
-        echo '🧹 Cleaned up Docker session.'
-      }
-    }
-  }
-
-  post {
-    success {
-      echo '✅ CI/CD pipeline completed successfully!'
-    }
-    failure {
-      echo '❌ Something went wrong in the pipeline.'
-    }
-  }
 }
