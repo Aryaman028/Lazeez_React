@@ -18,7 +18,7 @@ pipeline {
         }
         stage('Run Container') {
             steps {
-                bat 'docker run -d -p 3000:80 --name lazeez_react lazeez_react'
+                bat 'docker run -d -p 5000:80 --name lazeez_react lazeez_react'
             }
         }
         stage('Push to Docker Hub') {
