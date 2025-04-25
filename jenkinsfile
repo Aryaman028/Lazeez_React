@@ -10,7 +10,7 @@ pipeline {
     stage('Checkout') {
       steps {
         echo '📦 Cloning source code...'
-        git 'https://github.com/Aryaman028/Lazeez_React.git' // Change this
+        git 'https://github.com/Aryaman028/Lazeez_React.git' 
       }
     }
 
