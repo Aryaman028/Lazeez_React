@@ -28,7 +28,7 @@ function Register(){
     return(
         <div className="register-body">
         <div className="register-main">
-            <h1>Sign Up Form</h1>
+            <h1>Register form</h1>
             {nameErr&& <p className="errP">*please fill every input field*</p>}
             <br />
             <p>Name</p>
